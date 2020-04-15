@@ -50,10 +50,10 @@ class ReceptiveField():
         f = []
         i,j = 0, 0
         while j < self.w:
-            if i <= len(ordered_nodes):
+            if i < len(ordered_nodes):
                 f.append(self.make_receptive_field(ordered_nodes[i], self.node_labels))
             else:
-                f.append(self.zero_receptive_field()) # Stride s may be too large
+                f.append(self.make_zero_receptive_field()) # Stride s may be too large
             i += self.s
             j += 1
             
@@ -91,6 +91,8 @@ class ReceptiveField():
         for k, v in self.default_attributes.items():
             nx.set_node_attributes(zero_padded_graph, v, k)
         # TODO: Set labelling as attribute
+        
+        return zero_padded_graph
         
     # Assemble neighbourhood around vertex v
     def assemble_neighbourhoods(self, v):
@@ -162,7 +164,7 @@ class ReceptiveField():
         rank_next = max([y for _,y in ranking])
         step = 1
         while len(padded_graph.nodes()) < N:
-            padded_graph.add_node(node_next + step)
+            padded_graph.add_node(node_next + step, **self.default_attributes)
             ranking.append((node_next + step, rank_next + step))
             step += 1
             
