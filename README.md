@@ -1,4 +1,4 @@
-# Patchy San
+# PATCHY-SAN
 
 Implementation of Learning Convolutional Neural Networks for Graphs by Mathias Niepert, Mohamed Ahmed, Konstantin Kutzkov, ICML 2014-2023. https://scholar.google.com.sg/scholar?oi=bibs&cluster=9917957179670149192&btnI=1&hl=en
 
