@@ -9,16 +9,20 @@ from keras.layers import Conv1D, Dense, Dropout, Flatten
 
 class PSCN():
     def __init__(self, w, num_attr, s=1, k=10, l='betweenness', # Patchy-San parameters
-                epochs=150, batch_size=32, optimizer='rmsprop' # CNN Parameters
-                attribute_name='node_attributes'): 
+                epochs=150, batch_size=32, optimizer='rmsprop', # CNN Parameters
+                attribute_name='node_attributes', num_classes=2):
+        # Receptive field parameters
         self.w = w
         self.s = s
         self.k = k
         self.l = l
         self.attribute_name = attribute_name
+        # CNN parameters
+        self.num_classes = num_classes
         self.epochs = epochs
         self.batch_size = batch_size
         self.metrics = ['accuracy']
+        self.optimizer = optimizer
         self.num_attr = num_attr
         self.model = KerasClassifier(build_fn=self.init_model,
                                     epochs=self.epochs,
@@ -37,22 +41,20 @@ class PSCN():
         model.add(first_conv_layer)
         # Second convolutional layer
         second_conv_layer = Conv1D(filters=8, 
-                            kernel_size=10, 
+                            kernel_size=min(self.w, 10), # Handle small graphs with less than 10 neighbourhoods
                             strides=1)
         model.add(second_conv_layer)
         model.add(Flatten())
         # ReLU units
         model.add(Dense(128,
-                        activation='relu', 
-                        name='dense_layer'))
+                        activation='relu'))
         # Regularizer
         model.add(Dropout(0.5))
         
-        # TODO: Add multiclass
         # Binary classification
-        model.add(Dense(1, activation='sigmoid'))
-        model.compile(loss='binary_crossentropy', 
-                      optimizer='rmsprop', # Maybe use ADAM?
+        model.add(Dense(self.num_classes, activation='softmax'))
+        model.compile(loss='categorical_crossentropy', 
+                      optimizer=self.optimizer, # Maybe use ADAM?
                       metrics=self.metrics)
         
         return model
@@ -89,7 +91,8 @@ class PSCN():
                                 k=self.k,
                                 s=self.s,
                                 l=self.l, 
-                                attribute_name=self.attribute_name)
+                                attribute_name=self.attribute_name, 
+                                num_attr=self.num_attr)
             
             receptive_fields = rf.make_all_receptive_fields()
             # Reshape to (w*k, a_v)

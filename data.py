@@ -2,7 +2,6 @@ import os
 import sys
 import networkx as nx
 from collections import defaultdict
-from graph import Graph
 
 data_path = './data/'
 
@@ -30,8 +29,18 @@ def load_compact_data(file_name):
     class_labels = graph_data['class_labels']
     adjacency_list = graph_data['adjacency_list']
     graph_indicator = graph_data['graph_indicator']
-    node_labels = graph_data['node_labels']
-    # # TODO: Add other parameters
+    # Node attributes
+    try:
+        node_labels = graph_data['node_labels']
+    except KeyError:
+        pass
+    
+    try:
+        node_attributes = graph_data['node_attributes']
+    except KeyError:
+        pass
+    
+    # TODO: Add edge attributes
     data = []
 
     N = len(class_labels)
@@ -43,32 +52,24 @@ def load_compact_data(file_name):
             if node not in dict(x.nodes()):
                 x.add_node(node)
 
-            # Register attributes
-            node_label = node_labels[node]
-            # node_attr = node_attributes[node]
-            x.add_node(node, node_label=node_label)
-            # x.add_node(node, node_attr)
+            # Register attributes and labels
+            try:
+                node_label = node_labels[node]
+                x.add_node(node, node_label=node_label)
+            except NameError:
+                pass
+            
+            try:
+                node_attr = node_attributes[node]
+                x.add_node(node, node_attributes=node_attr)
+            except NameError:
+                pass
 
             # Add edges
             for neighbour in adjacency_list[node]:
                 x.add_edge(node, neighbour)
 
         data.append((x, class_labels[i])) 
-
-    # graphs=graph_data['class_labels']
-    # adjency=graph_data['adjacency_list']
-    # data_dict=graph_data['graph_indicator']
-    # node_dic=graph_data['node_labels'] 
-    # data=[]
-    # for i,y in enumerate(graphs):
-    #     g=Graph()
-    #     for node in data_dict[i+1]:
-    #         g.name=i+1
-    #         g.add_vertex(node)
-    #         g.add_one_attribute(node,node_dic[node])
-    #         for node2 in adjency[node]:
-    #             g.add_edge((node,node2))
-    #     data.append((g,y))
 
     return data
 
@@ -88,12 +89,14 @@ def process_compact_files(data_path, file_name):
     }
 
     # Optional files
+    # Node labels
     try:
         node_labels = read_node_labels(data_path, file_name + '_node_labels.txt')
         graph_data['node_labels'] = node_labels
     except FileNotFoundError as e:
         print(e)
-
+        
+    # Node attributes
     try:
         node_attributes = read_node_attributes(data_path, file_name + '_node_attributes.txt')
         graph_data['node_attributes'] = node_attributes
